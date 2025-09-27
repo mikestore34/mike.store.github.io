@@ -105,7 +105,6 @@
         menuToggle.classList.toggle('active');
       });
 
-      // close mobile menu when clicking a link
       document.querySelectorAll('#navbar a').forEach(link => {
         link.addEventListener('click', () => {
           navbar.classList.remove('active');
@@ -114,27 +113,58 @@
       });
     }
   </script>
-<script>
+
+  <!-- Load services from Google Sheet -->
+ <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const whatsappNumber = "212717393301"; // <-- your WhatsApp number without +
+  const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSrOwbwl9WfLeIwWu6sVOzWIAoRWJicf1h6Hjm5yG0RGyKbug2uBt10D-ih1qA2BR0DWVNVIrXdGbTF/pub?output=csv"; // <-- حط link ديالك هنا
+  const container = document.querySelector(".service-cards");
+  const whatsappNumber = "212717393301"; // رقم الواتساب ديالك بلا +
 
-  document.querySelectorAll(".card .btn").forEach((btn) => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
+  fetch(sheetURL)
+    .then(res => res.text())
+    .then(data => {
+      const rows = data.split("\n").slice(1); // skip header
+      rows.forEach(row => {
+        const [title, description, price, video] = row.split(",");
+        if (!title) return;
 
-      const card = btn.closest(".card");
-      const title = card.querySelector("h3")?.innerText || "Unknown service";
-      const price = card.querySelector(".price")?.innerText || "Unknown price";
-      const link = card.querySelector('input[name="service-link"]')?.value || "No link provided";
+        const card = document.createElement("div");
+        card.className = "card";
+        card.innerHTML = `
+          <div class="media-box">
+            <video controls>
+              <source src="${video}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          <h3>${title}</h3>
+          <p class="info">${description}</p>
+          <span class="price">${price}</span>
+          <a href="#" class="btn"><i class="fas fa-shopping-cart"></i> Buy Now</a>
+        `;
 
-      const message = `Hello, I want to buy:\n\n📌 Service: ${title}\n💵 Price: ${price}\n🔗 Link: ${link}`;
-      const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+        container.appendChild(card);
+      });
 
-      window.open(url, "_blank");
-    });
-  });
+      // 🎯 دابا من بعد ما تزادو الكروت كاملين
+      document.querySelectorAll(".card .btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const card = btn.closest(".card");
+          const title = card.querySelector("h3").innerText;
+          const price = card.querySelector(".price").innerText;
+
+          const message = `Hello, I want to buy:\n\n📌 Service: ${title}\n💵 Price: ${price}`;
+          const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+          window.open(url, "_blank");
+        });
+      });
+    })
+    .catch(err => console.error("Error loading sheet:", err));
 });
 </script>
 
 </body>
 </html>
+
